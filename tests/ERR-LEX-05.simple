@@ -1,0 +1,10 @@
+PROGRAM teste6
+BEGIN
+  FUNCTION INT main ()
+  BEGIN
+    FLOAT somatorio;
+    --Gera o erro : Faltando em atribuição > =
+    somatorio : 1 ; 
+    RETURN 0 ;
+  END
+END

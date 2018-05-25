@@ -1,0 +1,10 @@
+PROGRAM teste4
+BEGIN
+  FUNCTION INT main ()
+  BEGIN
+    FLOAT somatorio;
+    --Gera o erro: Identificador iniciado com número/Número inválido
+    somatorio := 1a ; 
+    RETURN 0 ;
+  END
+END

@@ -1,0 +1,10 @@
+PROGRAM teste7
+BEGIN
+  FUNCTION INT main ()
+  BEGIN
+    FLOAT somatorio;
+    --Gera o erro : Erro léxico, {" + input[tokenPos] + "} não reconhecido
+    somatorio & 1 ; 
+    RETURN 0 ;
+  END
+END

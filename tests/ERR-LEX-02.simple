@@ -1,0 +1,10 @@
+PROGRAM teste3
+BEGIN
+  FUNCTION INT main ()
+  BEGIN
+    FLOAT somatorio;
+    --Gera o erro: Formato de número inválido
+    somatorio := 1. ; 
+    RETURN 0 ;
+  END
+END
