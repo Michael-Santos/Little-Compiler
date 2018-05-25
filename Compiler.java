@@ -420,10 +420,15 @@ public class Compiler {
             // Começo do escopo da função
             Func_decl fd = currentFunction = new Func_decl(any_type(), id());
             returnDefined = false;
+            Object type = null;
 
             // Verifica existência do identificador na tabela hash global
-            if (symbolTable.getInGlobal(fd.getId().getName()) != null) {
-                error.show("Variável global ou função com identificador '" + fd.getId().getName() + "' já declarada");
+            if ((type = symbolTable.getInGlobal(fd.getId().getName())) != null) {
+               if (type instanceof Func_decl){
+                    error.show("Função com identificador '" + fd.getId().getName() + "' já declarada");
+               } else {
+                    error.show("Variável global com identificador '" + fd.getId().getName() + "' já declarada");
+               }
             } else {
                 symbolTable.putInGlobal(fd.getId().getName(), fd);
             }
