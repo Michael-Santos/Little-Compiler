@@ -1,5 +1,0 @@
-# ignore .c, .class, .rar and .zip file
-*.c
-*.class
-*.rar
-*.zip

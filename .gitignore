@@ -1,3 +1,5 @@
 # exclude .c and .class files
 *.c
 *.class
+*.rar
+*.zip
