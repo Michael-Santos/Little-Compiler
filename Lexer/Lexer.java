@@ -6,10 +6,10 @@ import Error.*;
 public class Lexer {
 
 	// apenas para verificacao lexica
-	public static final boolean DEBUGLEXER = true;
+	public static final boolean DEBUGLEXER = false;
 
 	// "Método consultor"
-  public Lexer( char []input, CompilerError error ) {
+    public Lexer( char []input, CompilerError error ) {
     this.input = input;
     // add an end-of-file label to make it easy to do the lexer
     input[input.length - 1] = '\0';
@@ -84,7 +84,7 @@ public class Lexer {
 
 				  // Verifica tamanho da string
 				  if (strAux.length() > MaxLengthString) {
-					  error.signal("Overflow de String");
+					  error.signal("Overflow de string");
 				  }
 				  stringValue = strAux.toString();
 				  token = Symbol.STRINGLITERAL;
@@ -137,7 +137,7 @@ public class Lexer {
 
 							// Detecta caractere
 							if (Character.isLetter(input[tokenPos])) {
-								error.signal("Identificador iniciado com número/Número inválido");
+								error.signal("Identificador iniciado com número ou número inválido");
 							}
 						}
 
@@ -149,7 +149,7 @@ public class Lexer {
 							  intValue = Integer.parseInt(strAux.toString());
 
 							  if (intValue > MaxValueInteger) {
-								  error.signal("Overflow de Inteiro");
+								  error.signal("Overflow de inteiro");
 							  }
 							  token = Symbol.INTLITERAL;
 						  } else {
@@ -196,7 +196,7 @@ public class Lexer {
 									  token = Symbol.ASSIGN;
 									  tokenPos++;
 								  } else {
-									  error.signal("Faltando em atribuição > =");
+									  error.signal("Faltando '=' em atribuição (deve ser ':=', não ':')");
 								  }
 							  break;
 							  case ',':
@@ -206,7 +206,7 @@ public class Lexer {
 								  token = Symbol.SEMICOLON;
 							  break;
 							  default:
-								  error.signal("Erro léxico, {" + input[tokenPos] + "} não reconhecido");
+								  error.signal("Erro léxico - token '" + input[tokenPos] + "' não é reconhecido pela linguagem");
 						  }
 							tokenPos++;
 					  }

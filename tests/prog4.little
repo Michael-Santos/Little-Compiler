@@ -3,53 +3,10 @@ BEGIN
   -- Mensagens para impressao
   STRING msg1 := "Escolha operacao desejada: (0) N termo de Fibonacci, (1) Calcular fatorial:" ;
   STRING msg2 := "Insira o valor desejado:" ;
-  
-  -- Teste variáveis globais de vários tipos
-  INT a , b , c ;
-  FLOAT a , b , c ;
-  INT a ;
   STRING msgErro := "Entrada invalida!" ;
-  FLOAT a , b ;
-  STRING msgErro := "adb" ;
-
-  FUNCTION INT main ()
-  BEGIN
-    INT resultado , opcao , termo ;
-
-    -- Impressao de opcoes e recebimento das entradas
-    WRITE ( msg1 );
-    READ ( opcao );
-    WRITE ( msg2 );
-    READ ( termo );
-
-    -- Teste IF sem Else
-    IF ( opcao = 0 ) THEN
-    ENDIF
-
-    -- Teste call em função do tipo void
-    id ( a * b + 10 ) ;
-
-    -- Verifica opcao
-    IF ( opcao = 0 ) THEN
-      -- Fibonacci
-      resultado := fibonacci ( termo ) ;
-    ELSE
-      IF ( opcao = 1 ) THEN
-        -- Fatorial
-        resultado := fatorial ( termo ) ;
-      ELSE
-        -- Opcao inexistente (imprime mensagem de erro)
-        WRITE ( msgErro ) ;
-        RETURN 0 ;
-      ENDIF
-    ENDIF
-
-    WRITE ( resultado );
-    RETURN 0 ;
-  END
 
   -- Fibonacci recursivo
-  FUNCTION INT fibonacci (INT termo, FLOAT a)
+  FUNCTION INT fibonacci (INT termo)
   BEGIN
     IF ( termo < 2 ) THEN
       RETURN termo ;
@@ -72,5 +29,34 @@ BEGIN
       ENDFOR
     ENDIF
     RETURN resultado ;
+  END
+
+  FUNCTION INT main ()
+  BEGIN
+    INT resultado , opcao , termo ;
+
+    -- Impressao de opcoes e recebimento das entradas
+    WRITE ( msg1 );
+    READ ( opcao );
+    WRITE ( msg2 );
+    READ ( termo );
+
+    -- Verifica opcao
+    IF ( opcao = 0 ) THEN
+      -- Fibonacci
+      resultado := fibonacci ( termo ) ;
+    ELSE
+      IF ( opcao = 1 ) THEN
+        -- Fatorial
+        resultado := fatorial ( termo ) ;
+      ELSE
+        -- Opcao inexistente (imprime mensagem de erro)
+        WRITE ( msgErro ) ;
+        RETURN 0 ;
+      ENDIF
+    ENDIF
+
+    WRITE ( opcao , termo , resultado );
+    RETURN 0 ;
   END
 END

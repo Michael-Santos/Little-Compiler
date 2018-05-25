@@ -16,13 +16,4 @@ public class Assign_stmt implements Stmt {
 		expr.genC(pw);
 		pw.print(";", false);
 	}
-
-	public void genC(PW pw, boolean semicolon){
-		pw.print(id.getName() + " = ", false);
-		expr.genC(pw);
-
-		if (semicolon) {
-			pw.print(";", false);
-		}
-	}
 }

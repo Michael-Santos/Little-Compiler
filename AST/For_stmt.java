@@ -17,7 +17,7 @@ public class For_stmt implements Stmt{
 	public void genC(PW pw){
 		pw.print("for (", false);
 
-		assign_init.genC(pw, false);
+		assign_init.genC(pw);
 
 		if(cond != null) {
 			pw.print("; ", false);
@@ -28,7 +28,7 @@ public class For_stmt implements Stmt{
 
 		if(assign_step != null) {
 			pw.print("; ", false);
-			assign_step.genC(pw, false);
+			assign_step.genC(pw);
 		} else {
 			pw.print(";", false);
 		}
@@ -38,7 +38,7 @@ public class For_stmt implements Stmt{
 
 		if(!st.isEmpty()) {
 			boolean flagFirst = true;
-		
+
 			for(Stmt s : st) {
 				if(flagFirst) {
 					flagFirst = false;
@@ -47,17 +47,12 @@ public class For_stmt implements Stmt{
 					pw.println("");
 					pw.print("");
 				}
-				s.genC(pw, true);
+				s.genC(pw);
 				pw.println("", false);
 			}
 		}
 
 		pw.sub();
 		pw.print("}");
-	}
-
-	// For não tem semicolon sob nenhuma hipótese
-	public void genC(PW pw, boolean semicolon) {
-		this.genC(pw);
 	}
 }

@@ -6,42 +6,55 @@ import java.util.*;
 public class Compiler {
     // Geração de código
     public Program compile( char []p_input ) {
+        currentFunction = null;
+        isComparation = false;
+
         symbolTable = new SymbolTable();
         error = new CompilerError(null);
         lexer = new Lexer(p_input, error);
+        
         error.setLexer(lexer);
-        global = true;
-
+        
         lexer.nextToken();
         Program p = program();
 
         if (lexer.token != Symbol.EOF) {
             error.signal("Não chegou ao fim do arquivo");
         }
-
-        return p;
-    }
+        
+        // Verifica existência de função main
+        if (symbolTable.getInGlobal("main") == null) {
+          error.show("Não foi declarada função sem parâmetros 'main'");
+        }
+        
+        // Verifica ocorrência de erro durante compilação
+        if(error.wasAnErrorSignalled()) {
+            return null;
+        } else {
+            return p;
+        }
+    }   
 
     /* Program */
 
     // program := PROGRAM id BEGIN pgm_body END
     public Program program() {
         if (lexer.token != Symbol.PROGRAM) {
-            error.signal("Faltando > PROGRAM");
+            error.signal("Faltando 'PROGRAM'");
         }
         lexer.nextToken();
 
         Identifier id = id();
 
         if (lexer.token != Symbol.BEGIN) {
-            error.signal("Faltando > BEGIN");
+            error.signal("Faltando 'BEGIN'");
         }
         lexer.nextToken();
 
         Pgm_body pb = pgm_body();
 
         if (lexer.token != Symbol.END) {
-            error.signal("Faltando > END");
+            error.signal("Faltando 'END'");
         }
         lexer.nextToken();
 
@@ -52,7 +65,7 @@ public class Compiler {
     // id := IDENTIFIER
     public Identifier id() {
         if (lexer.token != Symbol.IDENT) {
-            error.signal("Faltando > identificador (string)");
+            error.signal("Faltando identificador (uma string)");
         }
 
         String st = lexer.getStringValue();
@@ -61,15 +74,13 @@ public class Compiler {
         return new Identifier(st);
     }
 
-    // pgm_body := decl func_declarations
-    public Pgm_body pgm_body() {
-        Decl d = decl();
-        // A partir desse ponto não existirá mais variáveis globais
-        global = false;
-        ArrayList<Func_decl> fd = func_declarations();
-        
-        return new Pgm_body(d, fd);
-    }
+        // pgm_body := decl func_declarations
+        public Pgm_body pgm_body() {
+            Decl d = decl();
+            ArrayList<Func_decl> fd = func_declarations();
+
+            return new Pgm_body(d, fd);
+        }
 
     // decl := string_decl_list {decl} | var_decl_list {decl} | empty
     public Decl decl() {
@@ -112,7 +123,7 @@ public class Compiler {
             Identifier id = id();
 
             if (lexer.token != Symbol.ASSIGN) {
-                error.signal("Faltando > := (símbolo de atribuição)");
+                error.signal("Faltando ':=' (símbolo de atribuição)");
             }
             lexer.nextToken();
 
@@ -120,20 +131,62 @@ public class Compiler {
 
             // Cria objeto String_decl
             String_decl sd = new String_decl(id, st);
+            Object type;
 
-            // Verificar se a variável já existe, caso não exista ainda armazena-a na tabela hash
-            if (symbolTable.getInGlobal(id.getName()) != null) {
-                error.show("Já existe a variável/função " + id.getName() );
-            }else{
-                if (global) {
+            // Verifica existência do identificador na tabela hash global, pois não estamos em uma função,
+            // caso contrário verifica na hash local
+            /*if (currentFunction == null) {
+                if (symbolTable.getInGlobal(id.getName()) != null) {
+                    error.show("Variável global ou função com identificador '" + id.getName() + "' já declarada");
+                }else{
                     symbolTable.putInGlobal(id.getName(), sd);
-                }else {
+                }
+            } else {
+                if ((symbolTable.getInLocal(id.getName())) != null) {
+                    error.show("Variável local com identificador '" + id.getName() + "' já declarada");
+                } else if ((type = symbolTable.getInGlobal(id.getName())) != null) {
+                    if (type instanceof Func_decl) {
+                        error.show("Não pode ser declarada variável '" + id.getName() + "', pois existe função com o mesmo identificador");
+                    } else {
+                        symbolTable.putInLocal(id.getName(), sd);
+                    }
+                }
+            }*/
+
+            if ((type = symbolTable.getInGlobal(id.getName())) != null) {
+                if ((type instanceof Func_decl)){
+                    error.show("Função com identificador '" + id.getName() + "' já declarada");
+                } else if(currentFunction == null){
+                    error.show("Variável global com identificador '" + id.getName() + "' já declarada");
+                }
+            } else if (symbolTable.getInLocal(id.getName()) != null) {
+                error.show("Variável local com identificador '" + id.getName() + "' já declarada");
+            } else {
+                // Verifica se o escopo é global ou local
+                if (currentFunction == null) {
+                    symbolTable.putInGlobal(id.getName(), sd);
+
+                } else {
                     symbolTable.putInLocal(id.getName(), sd);
                 }
             }
 
+            // Verifica existência do identificador na tabela hash global e local
+            /*if (symbolTable.getInGlobal(id.getName()) != null) {
+                error.show("Variável global ou função com identificador '" + id.getName() + "' já declarada");
+            } else if (symbolTable.getInLocal(id.getName()) != null) {
+                error.show("Variável local com identificador '" + id.getName() + "' já declarada");
+            } else {
+                // Verifica se o escopo é global ou local
+                if (currentFunction == null) {
+                    symbolTable.putInGlobal(id.getName(), sd);
+                } else {
+                    symbolTable.putInLocal(id.getName(), sd);
+                }
+            }*/
+            
             if (lexer.token != Symbol.SEMICOLON) {
-                error.signal("Faltando > ; (ponto e vírgula)");
+                error.signal("Faltando ';' (ponto e vírgula)");
             }
             lexer.nextToken();
 
@@ -144,7 +197,7 @@ public class Compiler {
     // str := STRINGLITERAL
     public String str() {
         if (lexer.token != Symbol.STRINGLITERAL) {
-            error.signal("Faltando > literal (string)");
+            error.signal("Faltando 'literal' (string)");
         }
 
         String st = lexer.getStringValue();
@@ -185,12 +238,47 @@ public class Compiler {
             ArrayList<Identifier> id = id_list();
 
             for(Identifier identifier : id){
+                Var_decl variable = new Var_decl(identifier, vt);
+                Object type = null;
 
-                vd.add(new Var_decl(identifier, vt));
+                // Verifica existência do identificador na tabela hash global, pois não estamos em uma função,
+                // caso contrário verifica na hash local
+                if((type = symbolTable.getInGlobal(identifier.getName())) != null){
+                    if (type instanceof Func_decl) {
+                        error.show("Função com identificador '" + identifier.getName() + "' já declarada");
+                    } else if(currentFunction == null){
+                        error.show("Variável global com identificador '" + identifier.getName() + "' já declarada");
+                    }
+                } else if (symbolTable.getInLocal(identifier.getName()) != null) {
+                    error.show("Variável local com identificador '" + identifier.getName() + "' já declarada");
+                } else {
+                    // Verifica se o escopo é global ou local
+                    if (currentFunction == null) {
+                        symbolTable.putInGlobal(identifier.getName(), variable);
+                    } else {
+                        symbolTable.putInLocal(identifier.getName(), variable);
+                    }
+                }
+
+                // Verifica existência do identificador na tabela hash global e local
+                /*if (symbolTable.getInGlobal(identifier.getName()) != null) {
+                    error.show("Variável global ou função com identificador '" + identifier.getName() + "' já declarada");
+                } else if (symbolTable.getInLocal(identifier.getName()) != null) {
+                    error.show("Variável local com identificador '" + identifier.getName() + "' já declarada");
+                } else {
+                    // Verifica se o escopo é global ou local
+                    if (currentFunction == null) {
+                        symbolTable.putInGlobal(identifier.getName(), variable);
+                    } else {
+                        symbolTable.putInLocal(identifier.getName(), variable);
+                    }
+                }*/
+                
+                vd.add(variable);
             }
 
             if (lexer.token != Symbol.SEMICOLON) {
-                error.signal("Faltando > ; (ponto e vírgula)");
+                error.signal("Faltando ';' (ponto e vírgula)");
             }
             lexer.nextToken();
         }
@@ -273,7 +361,24 @@ public class Compiler {
 
     // param_decl := var_type id
     public Param_decl param_decl() {
-        return(new Param_decl(var_type(), id()));
+        String vt = var_type();
+        Identifier id = id();
+        
+        Param_decl pd = new Param_decl(vt, id);
+        Object type = null;
+
+        // Verifica existência do identificador na tabela hash global e local
+        if ((type = symbolTable.getInGlobal(id.getName())) != null) {
+            if (type instanceof Func_decl){
+                error.show("Função com identificador '" + id.getName() + "' já declarada");    
+            }
+        } else if (symbolTable.getInLocal(id.getName()) != null) {
+            error.show("Parâmetro com identificador '" + id.getName() + "' já declarado");
+        } else {
+            symbolTable.putInLocal(id.getName(), pd);
+        }
+        
+        return(pd);
     }
 
     // param_decl_tail := , param_decl param_decl_tail | empty
@@ -298,7 +403,7 @@ public class Compiler {
         if (lexer.token == Symbol.FUNCTION) {
             fd.add(func_decl());
         }
-        
+
         if (lexer.token == Symbol.FUNCTION) {
             fd.addAll(func_decl_tail());
         }
@@ -308,53 +413,70 @@ public class Compiler {
 
     // func_decl := FUNCTION any_type id ({param_decl_list}) BEGIN func_body END | empty
     public Func_decl func_decl() {
-        String tipo;
-        Identifier id;
-        ArrayList<Param_decl> pd = new ArrayList<Param_decl>();
-        Func_body fb;
-
         // Checagem sendo realizada em func_declarations() e func_decl_tail()
         //if (lexer.token == Symbol.FUNCTION) {
             lexer.nextToken();
 
-            tipo = any_type();
-            id = id();
+            // Começo do escopo da função
+            Func_decl fd = currentFunction = new Func_decl(any_type(), id());
+            returnDefined = false;
+
+            // Verifica existência do identificador na tabela hash global
+            if (symbolTable.getInGlobal(fd.getId().getName()) != null) {
+                error.show("Variável global ou função com identificador '" + fd.getId().getName() + "' já declarada");
+            } else {
+                symbolTable.putInGlobal(fd.getId().getName(), fd);
+            }
 
             if (lexer.token != Symbol.LPAR) {
-                error.signal("Faltando > ( (abre parênteses)");
+                error.show("Faltando '(' (abre parênteses)");
             }
 
             lexer.nextToken();
 
             if (lexer.token == Symbol.FLOAT || lexer.token == Symbol.INT) {
-                pd = param_decl_list();
+                // Verifica se é main
+                if(fd.getId().getName().equals("main")) {
+                    error.show("Função 'main' não pode ter parâmetros");
+                }
+                fd.setPd(param_decl_list());
+            } else {
+                fd.setPd(new ArrayList<Param_decl>());
             }
 
             if (lexer.token != Symbol.RPAR) {
-                error.signal("Faltando > ) (fecha parênteses)");
+                error.signal("Faltando ')' (fecha parênteses)");
             }
 
             lexer.nextToken();
 
             if (lexer.token != Symbol.BEGIN) {
-                error.signal("Faltando > BEGIN");
+                error.signal("Faltando 'BEGIN'");
             }
 
             lexer.nextToken();
 
-            fb = func_body();
+            fd.setFb(func_body());
 
             if (lexer.token != Symbol.END) {
-                error.signal("Faltando > END");
+                error.signal("Faltando 'END'");
             }
 
-            // Esvaziar hashTable de variáveis locais
-            symbolTable.removeLocalIdent();            
+            // Esvaziar tabela hash de variáveis locais
+            symbolTable.removeLocalIdent();
+            
+            // Verifica existência de retorno caso não seja uma função Void ou a existência caso contrário
+            if(!(fd.getType().equals("VOID")) && (returnDefined == false)) {
+                error.show("Função '" + fd.getId().getName() + "' de tipo não 'VOID' terminada sem valor de retorno definido");
+            }
+            
+            // Fim do escopo da função
+            currentFunction = null;
 
             lexer.nextToken();
         //}
-
-        return(new Func_decl(tipo, id, pd, fb));
+        
+        return(fd);
     }
 
     // func_decl_tail := func_decl {func_decl_tail}
@@ -398,7 +520,7 @@ public class Compiler {
         return(st);
     }
 
-    // stmt := assign_stmt | read_stmt | write_stmt | return_stmt | if_stmt | for_stmt | call_expr ;
+    // stmt := assign_stmt | read_stmt | write_stmt | return_stmt | if_stmt | for_stmt | call_stmt
     public Stmt stmt() {
         Stmt st = null;
 
@@ -406,18 +528,13 @@ public class Compiler {
             case IDENT:
                 /* Checar 'assign_stmt' ou 'call_expr' para mais informações */
                 Identifier id = id();
-
+                
                 if (lexer.token == Symbol.ASSIGN) {
                     st = assign_stmt(id);
                 } else if (lexer.token == Symbol.LPAR) {
-                    st = call_expr(id);
-
-                    if (lexer.token != Symbol.SEMICOLON) {
-                        error.signal("Faltando > ; (ponto e vírgula)");
-                    }
-                    lexer.nextToken();
+                    st = call_stmt(id);
                 } else {
-                    error.signal("Erro de instrução (faltando atribuição ou parênteses)");
+                    error.signal("Erro de instrução - faltando atribuição ou parênteses");
                 }
                 break;
             case READ:
@@ -436,7 +553,7 @@ public class Compiler {
                 st = for_stmt();
                 break;
             default:
-                error.signal("Erro de instrução (inválida ou inexistente)");
+                error.signal("Erro de instrução - inválida ou inexistente");
         }
 
         return(st);
@@ -449,7 +566,7 @@ public class Compiler {
         Assign_stmt as = assign_expr(id);
 
         if (lexer.token != Symbol.SEMICOLON) {
-            error.signal("Faltando > ; (ponto e vírgula)");
+            error.signal("Faltando ';' (ponto e vírgula)");
         }
         lexer.nextToken();
 
@@ -461,84 +578,159 @@ public class Compiler {
         'assign_expr' é iniciado em ':=', não 'id' */
     public Assign_stmt assign_expr(Identifier id) {
         //id();
-
-        if (lexer.token != Symbol.ASSIGN) {
-            error.signal("Faltando > := (símbolo de atribuição)");
+        
+        // Verifica existência do identificador na tabela hash global e local
+        if (symbolTable.get(id.getName()) == null) {
+            error.show("Variável '" + id.getName() + "' não declarada");
+        } else {
+            // Atribui o tipo como tipo "esperado"
+            exprExpectedType = ((Typable) symbolTable.get(id.getName())).getType();
         }
+        
+        if (lexer.token != Symbol.ASSIGN) {
+            error.signal("Faltando ':=' (símbolo de atribuição)");
+        }
+        
         lexer.nextToken();
-
-        return(new Assign_stmt(id, expr()));
+        
+        Assign_stmt as = new Assign_stmt(id, expr());
+        // O tipo não é mais esperado
+        exprExpectedType = null;
+        
+        return(as);
     }
 
     // read_stmt := READ ( id_list );
     public Read_stmt read_stmt() {
         if (lexer.token != Symbol.READ) {
-            error.signal("Faltando > READ");
+            error.signal("Faltando 'READ'");
         }
         lexer.nextToken();
 
         if (lexer.token != Symbol.LPAR) {
-            error.signal("Faltando > ( (abre parênteses)");
+            error.signal("Faltando '(' (abre parênteses)");
         }
         lexer.nextToken();
 
         ArrayList<Identifier> id = id_list();
+        ArrayList<Typable> typable = new ArrayList<Typable>();
+        
+        for(Identifier identifier : id){
+            // Verifica existência do identificador na tabela hash global e local
+            if (symbolTable.get(identifier.getName()) == null) {
+              error.show("Variável '" + identifier.getName() + "' não declarada");
+            } else {
+                // Verifica se o tipo é Void
+                if (((Typable) symbolTable.get(identifier.getName())).getType().equals("VOID")) {
+                    error.show("Escrevendo em algo do tipo 'VOID'");
+                } else {
+                    typable.add((Typable) symbolTable.get(identifier.getName()));
+                }
+            }
+        }
 
         if (lexer.token != Symbol.RPAR) {
-            error.signal("Faltando > ) (fecha parênteses)");
+            error.signal("Faltando ')' (fecha parênteses)");
         }
         lexer.nextToken();
 
         if (lexer.token != Symbol.SEMICOLON) {
-            error.signal("Faltando > ; (ponto e vírgula)");
+            error.signal("Faltando ';' (ponto e vírgula)");
         }
         lexer.nextToken();
 
-        return(new Read_stmt(id));
+        return(new Read_stmt(typable));
     }
 
     // write_stmt := WRITE ( id_list );
     public Write_stmt write_stmt() {
         if (lexer.token != Symbol.WRITE) {
-            error.signal("Faltando > WRITE");
+            error.signal("Faltando 'WRITE'");
         }
         lexer.nextToken();
 
         if (lexer.token != Symbol.LPAR) {
-            error.signal("Faltando > ( (abre parênteses)");
+            error.signal("Faltando '(' (abre parênteses)");
         }
         lexer.nextToken();
 
         ArrayList<Identifier> id = id_list();
+        ArrayList<Typable> typable = new ArrayList<Typable>();
+
+        for(Identifier identifier : id){
+            // Verifica existência do identificador na tabela hash global e local
+            if (symbolTable.get(identifier.getName()) == null) {
+              error.show("Variável '" + identifier.getName() + "' não declarada");
+            } else {
+                // Verifica se o tipo é Void
+                if (((Typable) symbolTable.get(identifier.getName())).getType().equals("VOID")) {
+                    error.show("Lendo de algo do tipo 'VOID'");
+                } else {
+                    typable.add((Typable) symbolTable.get(identifier.getName()));
+                }
+            }
+        }
 
         if (lexer.token != Symbol.RPAR) {
-            error.signal("Faltando > ) (fecha parênteses)");
+            error.signal("Faltando ')' (fecha parênteses)");
         }
         lexer.nextToken();
 
         if (lexer.token != Symbol.SEMICOLON) {
-            error.signal("Faltando > ; (ponto e vírgula)");
+            error.signal("Faltando ';' (ponto e vírgula)");
         }
         lexer.nextToken();
 
-        return(new Write_stmt(id));
+        return(new Write_stmt(typable));
     }
 
     // return_stmt := RETURN expr ;
     public Return_stmt return_stmt() {
+        returnDefined = true;
+        
         if (lexer.token != Symbol.RETURN) {
-            error.signal("Faltando > RETURN");
+            error.signal("Faltando 'RETURN'");
         }
+        
+        // Verifica se a função atual é void
+        if (currentFunction.getType().equals("VOID")) {
+            error.show("Função '" + currentFunction.getId().getName() + "' do tipo 'VOID' terminada com retorno");
+        }
+        
         lexer.nextToken();
-
+        
+        // Atribui o tipo da função atual como tipo "esperado"
+        exprExpectedType = currentFunction.getType();
+        
         Expr expr = expr();
-
+        
+        // O tipo não é mais esperado
+        exprExpectedType = null;
+        
         if (lexer.token != Symbol.SEMICOLON) {
-            error.signal("Faltando > ; (ponto e vírgula)");
+            error.signal("Faltando ';' (ponto e vírgula)");
         }
         lexer.nextToken();
 
         return(new Return_stmt(expr));
+    }
+
+    // call_stmt := call_expr ;
+    public Call_stmt call_stmt(Identifier id) {
+        // Verifica existência do identificador na tabela hash global
+        if (symbolTable.getInGlobal(id.getName()) == null) {
+          error.show("Função chamada '" + id.getName() + "' não declarada");
+        }
+        
+        Call_expr cexpr = call_expr(id);
+        
+        if (lexer.token != Symbol.SEMICOLON) {
+          error.signal("Faltando ';' (ponto e vírgula)");
+        }
+        
+        lexer.nextToken();
+        
+        return(new Call_stmt(cexpr));
     }
 
     /* Expressions */
@@ -582,16 +774,57 @@ public class Compiler {
         if (lexer.token == Symbol.IDENT) {
             /* Checar 'primary' ou 'call_expr' para mais informações */
             Identifier id = id();
-
+            
             if (lexer.token == Symbol.LPAR) {
+                // Verifica existência do identificador na tabela hash global
+                if (symbolTable.getInGlobal(id.getName()) == null) {
+                  error.show("Função chamada '" + id.getName() + "' não declarada");
+                } else {
+                    // Verifica o tipo
+                    if(exprExpectedType == null) {
+                        // Atribui o primeiro tipo como tipo "esperado"
+                        exprExpectedType = ((Typable) symbolTable.get(id.getName())).getType();
+                    } else {
+                        // Verifica compatibilidade de tipos
+                        String type = ((Typable) symbolTable.get(id.getName())).getType();
+
+                        if(!exprExpectedType.equals(type)) {
+                            error.show("Incompatibilidade de tipos - função '" + id.getName() + "' é do tipo '" + type + "', esperava-se ser do tipo '" + exprExpectedType + "'");
+                        }
+                    }
+                }
+                
                 ps = call_expr(id);
             } else {
+                // Verifica existência do identificador na tabela hash global e local
+                if (symbolTable.get(id.getName()) == null) {
+                  error.show("Variável '" + id.getName() + "' não declarada");
+                } else {
+                    // Verifica o tipo
+                    if(exprExpectedType == null) {
+                        // Atribui o primeiro tipo como tipo "esperado"
+                        exprExpectedType = ((Typable) symbolTable.get(id.getName())).getType();
+                    } else {
+                        // Verifica compatibilidade de tipos
+                        String type = ((Typable) symbolTable.get(id.getName())).getType();
+                        
+                        if (exprExpectedType.equals("FLOAT")){
+                            if(!(exprExpectedType.equals("FLOAT") || exprExpectedType.equals("INT"))){
+                                error.show("Incompatibilidade de tipos - variável '" + id.getName() + "' é do tipo '" + type + "', esperava-se ser do tipo 'FLOAT'");
+                            }
+
+                        }else if(!exprExpectedType.equals(type)) {
+                            error.show("Incompatibilidade de tipos - variável '" + id.getName() + "' é do tipo '" + type + "', esperava-se ser do tipo '" + exprExpectedType + "'");
+                        }
+                    }
+                }
+                
                 ps = id;
             }
         } else if (lexer.token == Symbol.LPAR || lexer.token == Symbol.INTLITERAL || lexer.token == Symbol.FLOATLITERAL) {
             return(primary());
         } else {
-            error.signal("Erro de expressão (faltando identificador, parênteses ou número)");
+            error.signal("Erro de expressão - faltando identificador, parênteses ou número");
         }
 
         return(ps);
@@ -604,9 +837,9 @@ public class Compiler {
     public Call_expr call_expr(Identifier id) {
         ArrayList<Expr> expr = new ArrayList<Expr>();
         //id();
-
+        
         if (lexer.token != Symbol.LPAR) {
-            error.signal("Faltando > ( (abre parênteses)");
+            error.signal("Faltando '(' (abre parênteses)");
         }
         lexer.nextToken();
 
@@ -615,7 +848,7 @@ public class Compiler {
         }
 
         if (lexer.token != Symbol.RPAR) {
-            error.signal("Faltando > ) (fecha parênteses)");
+            error.signal("Faltando ')' (fecha parênteses)");
         }
         lexer.nextToken();
 
@@ -651,9 +884,37 @@ public class Compiler {
         Postfix_expr postfix = null;
 
         if (lexer.token == Symbol.INTLITERAL) {
+            // Verifica o tipo
+            if(exprExpectedType == null) {
+                // Atribui o primeiro tipo como tipo "esperado"
+                exprExpectedType = "INT";
+            } else {
+                
+                if(!(exprExpectedType.equals("INT") || exprExpectedType.equals("FLOAT"))){
+                    error.show("Incompatibilidade de tipos - declarado literal 'INT', esperava-se ser do tipo '" + exprExpectedType + "'");
+                }
+
+                //if(!exprExpectedType.equals("INT") ) {
+                //    error.show("Incompatibilidade de tipos - declarado literal 'INT', esperava-se ser do tipo '" + exprExpectedType + "'");
+                //}
+            }
+            
             postfix = new Int_literal(lexer.getIntValue());
             lexer.nextToken();
         } else if(lexer.token == Symbol.FLOATLITERAL){
+            // Verifica o tipo
+            if(exprExpectedType == null) {
+                // Atribui o primeiro tipo como tipo "esperado"
+                exprExpectedType = "FLOAT";
+            } else {
+                if(!exprExpectedType.equals("FLOAT")) {
+                    // Necessário quando há comparações entre INT e FLOAT
+                    if(!(exprExpectedType.equals("INT") && isComparation)){
+                         error.show("Incompatibilidade de tipos - declarado literal 'FLOAT', esperava-se ser do tipo '" + exprExpectedType + "'");
+                    }
+                }
+            }
+            
             postfix = new Float_literal(lexer.getFloatValue());
             lexer.nextToken();
         } else if (lexer.token == Symbol.LPAR) {
@@ -662,14 +923,14 @@ public class Compiler {
             postfix = expr();
 
             if (lexer.token != Symbol.RPAR) {
-                error.signal("Faltando > ) (fecha parênteses)");
+                error.signal("Faltando ')' (fecha parênteses)");
             }
             lexer.nextToken();
         } /*else if (lexer.token == Symbol.IDENT) {
             id();
         }*/
         else {
-            error.signal("Erro de expressão (faltando parênteses ou número)");
+            error.signal("Erro de expressão - faltando parênteses ou número");
         }
 
         return(postfix);
@@ -680,7 +941,7 @@ public class Compiler {
         Symbol op;
 
         if (lexer.token != Symbol.PLUS && lexer.token != Symbol.MINUS) {
-            error.signal("Operador inválido, aceita + ou - (adição ou subtração)");
+            error.signal("Operador inválido - aceita '+' ou '-' (adição ou subtração)");
         }
 
         op = lexer.token;
@@ -694,7 +955,7 @@ public class Compiler {
         Symbol op;
 
         if (lexer.token != Symbol.MULT && lexer.token != Symbol.DIV) {
-            error.signal("Operador inválido, aceita * ou / (multiplicação ou divisão)");
+            error.signal("Operador inválido - aceita '*' ou '/' (multiplicação ou divisão)");
         }
 
         op = lexer.token;
@@ -708,24 +969,24 @@ public class Compiler {
     // if_stmt := IF ( cond ) THEN stmt_list else_part ENDIF
     public If_stmt if_stmt() {
         if (lexer.token != Symbol.IF) {
-            error.signal("Faltando > IF");
+            error.signal("Faltando 'IF'");
         }
         lexer.nextToken();
 
         if (lexer.token != Symbol.LPAR) {
-            error.signal("Faltando > ( (abre parênteses)");
+            error.signal("Faltando '(' (abre parênteses)");
         }
         lexer.nextToken();
 
         Cond cond = cond();
 
         if (lexer.token != Symbol.RPAR) {
-            error.signal("Faltando > ) (fecha parênteses)");
+            error.signal("Faltando ')' (fecha parênteses)");
         }
         lexer.nextToken();
 
         if (lexer.token != Symbol.THEN) {
-            error.signal("Faltando > THEN");
+            error.signal("Faltando 'THEN'");
         }
         lexer.nextToken();
 
@@ -733,7 +994,7 @@ public class Compiler {
         Else_part else_part = else_part();
 
         if (lexer.token != Symbol.ENDIF) {
-            error.signal("Faltando > ENDIF");
+            error.signal("Faltando 'ENDIF'");
         }
         lexer.nextToken();
 
@@ -751,7 +1012,28 @@ public class Compiler {
 
     // cond := expr compop expr
     public Cond cond() {
-        return(new Cond(expr(), compop(), expr()));
+        exprExpectedType = null;
+        isComparation = true;
+
+        Expr exprLeft = expr();
+        //String exprLeftType = exprExpectedType;
+        
+        String compop = compop();
+        
+        //exprExpectedType = null;
+        Expr exprRight = expr();
+        //String exprRightType = exprExpectedType;
+        
+        // Verifica o tipo
+        //if(!exprLeftType.equals(exprRightType)) {
+        //    error.show("Incompatibilidade de tipos - expressão à esquerda é do tipo '" + exprLeftType + "', expressão à direita é do tipo '" + exprRightType + "'");
+        //}
+        
+        // O tipo não é mais esperado
+        isComparation = false;
+        exprExpectedType = null;
+        
+        return(new Cond(exprLeft, compop, exprRight));
     }
 
     // compop := < | > | =
@@ -769,7 +1051,7 @@ public class Compiler {
                 op = "=";
                 break;
             default:
-                error.signal("Condição inválida, aceita <, > ou = (menor que, maior que ou igual)");
+                error.signal("Condição inválida - aceita '<', '>' ou '=' (menor que, maior que ou igual)");
         }
 
         lexer.nextToken();
@@ -783,12 +1065,12 @@ public class Compiler {
         ArrayList<Stmt> stmt_list;
 
         if (lexer.token != Symbol.FOR) {
-            error.signal("Faltando > FOR");
+            error.signal("Faltando 'FOR'");
         }
         lexer.nextToken();
 
         if (lexer.token != Symbol.LPAR) {
-            error.signal("Faltando > ( (abre parênteses)");
+            error.signal("Faltando '(' (abre parênteses)");
         }
         lexer.nextToken();
 
@@ -798,7 +1080,7 @@ public class Compiler {
         }
 
         if (lexer.token != Symbol.SEMICOLON) {
-            error.signal("Faltando > ; (ponto e vírgula)");
+            error.signal("Faltando ';' (ponto e vírgula)");
         }
         lexer.nextToken();
 
@@ -807,7 +1089,7 @@ public class Compiler {
         }
 
         if (lexer.token != Symbol.SEMICOLON) {
-            error.signal("Faltando > ; (ponto e vírgula)");
+            error.signal("Faltando ';' (ponto e vírgula)");
         }
         lexer.nextToken();
 
@@ -817,14 +1099,14 @@ public class Compiler {
         }
 
         if (lexer.token != Symbol.RPAR) {
-            error.signal("Faltando > ) (fecha parênteses)");
+            error.signal("Faltando ')' (fecha parênteses)");
         }
         lexer.nextToken();
 
         stmt_list = stmt_list();
 
         if (lexer.token != Symbol.ENDFOR) {
-            error.signal("Faltando > ENDFOR");
+            error.signal("Faltando 'ENDFOR'");
         }
         lexer.nextToken();
 
@@ -834,5 +1116,9 @@ public class Compiler {
     private SymbolTable symbolTable;
     private Lexer lexer;
     private CompilerError error;
-    private Boolean global;
+    
+    private Func_decl currentFunction;
+    private String exprExpectedType;
+    private Boolean isComparation;
+    private Boolean returnDefined;
 }

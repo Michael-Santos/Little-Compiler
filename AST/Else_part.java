@@ -24,7 +24,7 @@ public class Else_part {
 					pw.println("");
 					pw.print("");
 				}
-				s.genC(pw, true);
+				s.genC(pw);
 				pw.println("", false);
 			}
 		}

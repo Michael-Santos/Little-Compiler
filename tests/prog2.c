@@ -6,11 +6,13 @@ int main () {
 
    float somatorio, resultado;
 
-   scanf(limite);
+   scanf("%d", &limite);
+   
+   somatorio = limite;
    
    somatorio = 0;
    
-   for (i = 1; i < limite + 1; i = i + 1) {
+   for (i = 1;; i < limite + 1; i = i + 1;) {
       base = i * 2 - 1;
       
       temp = i / 2;
@@ -24,7 +26,7 @@ int main () {
    
    resultado = somatorio * 4;
    
-   printf(resultado);
+   printf("%f", resultado);
    
    return(0);
 }

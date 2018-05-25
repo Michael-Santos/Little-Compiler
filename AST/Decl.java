@@ -25,7 +25,7 @@ public class Decl {
       ArrayList<Var_decl> floatd = new ArrayList<Var_decl>();
 
       for (Var_decl v : vd) {
-        if(v.getTipo() == "INT") {
+        if(v.getType() == "INT") {
           intd.add(v);
         } else {
           floatd.add(v);

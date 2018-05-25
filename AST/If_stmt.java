@@ -32,7 +32,7 @@ public class If_stmt implements Stmt{
 					pw.println("");
 					pw.print("");
 				}
-				s.genC(pw, true);
+				s.genC(pw);
 				pw.println("", false);
 			}
 		}
@@ -43,10 +43,5 @@ public class If_stmt implements Stmt{
 		if(ep != null) {
 			ep.genC(pw);
 		}
-	}
-
-	// If não tem semicolon sob nenhuma hipótese
-	public void genC(PW pw, boolean semicolon) {
-		this.genC(pw);
 	}
 }

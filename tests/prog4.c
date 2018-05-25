@@ -5,6 +5,8 @@ char msg1[] = "Escolha operacao desejada: (0) N termo de Fibonacci, (1) Calcular
 char msg2[] = "Insira o valor desejado:";
 char msgErro[] = "Entrada invalida!";
 
+int resultado;
+
 int fibonacci (int termo) {
    if (termo < 2) {
       return(termo);
@@ -21,7 +23,7 @@ int fatorial (int termo) {
    } else {
       resultado = termo;
       
-      for (i = termo - 1;i > 0; i = i - 1;) {
+      for (i = termo - 1;; i > 0; i = i - 1;) {
          resultado = resultado * i;
       }
    }

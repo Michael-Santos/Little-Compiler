@@ -15,12 +15,12 @@ public class SymbolTable {
        return localTable.put(key, value);
     }
     
-    public Object getInLocal( String key ) {
-       return localTable.get(key);
-    }
-    
     public Object getInGlobal( String key ) {
        return globalTable.get(key);
+    }
+    
+    public Object getInLocal( String key ) {
+       return localTable.get(key);
     }
     
     public Object get( String key ) {

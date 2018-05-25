@@ -8,6 +8,7 @@ BEGIN
 
     READ ( limite );
 
+    somatorio := limite ;
     somatorio := 0 ;
 
     FOR ( i := 1; i < limite + 1; i := i + 1 )

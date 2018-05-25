@@ -25,7 +25,7 @@ public class Func_body {
           pw.println("");
           pw.print("");
         }
-        s.genC(pw, true);
+        s.genC(pw);
         pw.println("", false);
 			}
     }

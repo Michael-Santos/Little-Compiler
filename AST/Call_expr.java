@@ -2,7 +2,7 @@ package AST;
 
 import java.util.*;
 
-public class Call_expr implements Stmt, Postfix_expr {
+public class Call_expr implements Postfix_expr {
   private Identifier id;
   private ArrayList<Expr> expr_list;
 
@@ -13,7 +13,7 @@ public class Call_expr implements Stmt, Postfix_expr {
 
   public void genC(PW pw) {
     pw.print(id.getName() + " (", false);
-    
+
     if(!expr_list.isEmpty()) {
       boolean flagFirst = true;
 
@@ -28,28 +28,5 @@ public class Call_expr implements Stmt, Postfix_expr {
     }
 
     pw.print(")", false);
-  }
-
-  public void genC(PW pw, boolean semicolon){
-		pw.print(id.getName() + " (", false);
-    
-    if(!expr_list.isEmpty()) {
-      boolean flagFirst = true;
-
-      for(Expr e : expr_list) {
-        if(flagFirst) {
-          flagFirst = false;
-        } else {
-          pw.print(", ", false);
-        }
-        e.genC(pw);
-      }
-    }
-
-    pw.print(")", false);
-
-		if (semicolon) {
-			pw.print(";", false);
-		}
 	}
 }

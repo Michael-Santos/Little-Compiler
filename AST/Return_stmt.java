@@ -16,16 +16,4 @@ public class Return_stmt implements Stmt {
 
 		pw.print(");", false);
 	}
-
-	public void genC(PW pw, boolean semicolon){
-		pw.print("return(", false);
-
-		expr.genC(pw);
-
-		pw.print(")", false);
-
-		if (semicolon) {
-			pw.print(";", false);
-		}
-	}
 }

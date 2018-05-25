@@ -2,26 +2,30 @@ package AST;
 
 import java.util.*;
 
-public class Var_decl {
+public class Var_decl implements Typable {
   private Identifier id;
-  private String tipo;
+  private String type;
 
-  public Var_decl( Identifier id, String tipo ) {
+  public Var_decl( Identifier id, String type ) {
     this.id = id;
-    this.tipo = tipo;
+    this.type = type;
   }
 
-  public String getTipo() {
-    return this.tipo;
+  public Identifier getId() {
+    return (this.id);
+  }
+
+  public String getType() {
+    return (this.type);
   }
 
   public void genC(PW pw) {
-    pw.println(tipo.toLowerCase() + " " + id.getName() + ";");
+    pw.println(type.toLowerCase() + " " + id.getName() + ";");
   }
 
   public void genC(PW pw, boolean type) {
     if(type) {
-      pw.print(tipo.toLowerCase() + " " + id.getName());
+      pw.print(this.type.toLowerCase() + " " + id.getName());
     } else {
       pw.print(id.getName(), false);
     }

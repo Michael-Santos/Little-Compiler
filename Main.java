@@ -48,8 +48,7 @@ public class Main {
                 System.out.println("Error in handling the file " + args[0]);
                 return ;
             }
-                
-
+            
             Compiler compiler = new Compiler();
             
             String outputFileName;
@@ -65,25 +64,28 @@ public class Main {
                 outputFileName = sb.toString();
             }
                 
-            FileOutputStream  outputStream;
-            try { 
-               outputStream = new FileOutputStream(outputFileName);
-            } catch ( IOException e ) {
-                System.out.println("File " + args[1] + " was not found");
-                return ;
-            }
-            PrintWriter printWriter = new PrintWriter(outputStream);
             program = null;
               // the generated code goes to a file and so are the errors
-            program  = compiler.compile(input/*, new PrintWriter(System.out) */);
+            program = compiler.compile(input/*, new PrintWriter(System.out) */);
             
             if ( program != null ) {
-               PW pw = new PW();
-               pw.set(printWriter);
-               program.genC( pw );
-               if ( printWriter.checkError() ) {
-                  System.out.println("There was an error in the output");
-               }
+                // Alteração para que o arquivo seja gerado apenas quando não houver erros
+                FileOutputStream outputStream;
+                try { 
+                   outputStream = new FileOutputStream(outputFileName);
+                } catch ( IOException e ) {
+                    System.out.println("File " + args[1] + " was not found");
+                    return ;
+                }
+            
+                PrintWriter printWriter = new PrintWriter(outputStream);
+            
+                PW pw = new PW();
+                pw.set(printWriter);
+                program.genC( pw );
+                if ( printWriter.checkError() ) {
+                    System.out.println("There was an error in the output");
+                }
             }
         }
     }
