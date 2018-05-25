@@ -3,11 +3,11 @@ package AST;
 import java.util.*;
 
 public class For_stmt implements Stmt{
-	private Assign_stmt assign_init, assign_step;
+	private Assign_expr assign_init, assign_step;
 	private Cond cond;
 	private ArrayList<Stmt> st;
 
-	public For_stmt(Assign_stmt assign_init, Cond cond, Assign_stmt assign_step, ArrayList<Stmt> st){
+	public For_stmt(Assign_expr assign_init, Cond cond, Assign_expr assign_step, ArrayList<Stmt> st){
 		this.assign_init = assign_init;
 		this.cond = cond;
 		this.assign_step = assign_step;

@@ -3,17 +3,14 @@ package AST;
 import java.util.*;
 
 public class Assign_stmt implements Stmt {
-	private Identifier id;
-	private Expr expr;
+	private Assign_expr ae;
 
-	public Assign_stmt(Identifier id, Expr expr){
-		this.id = id;
-		this.expr = expr;
+	public Assign_stmt(Assign_expr ae){
+		this.ae = ae;
 	}
 
 	public void genC(PW pw){
-		pw.print(id.getName() + " = ", false);
-		expr.genC(pw);
+		ae.genC(pw);
 		pw.print(";", false);
 	}
 }

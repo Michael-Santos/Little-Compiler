@@ -568,7 +568,9 @@ public class Compiler {
 
     // assign_stmt := assign_expr ;
     public Assign_stmt assign_stmt(Identifier id) {
-        Assign_stmt as = assign_expr(id);
+        Assign_expr ae = assign_expr(id);
+        Assign_stmt as = new Assign_stmt(ae); 
+
 
         if (lexer.token != Symbol.SEMICOLON) {
             error.signal("Faltando ';' (ponto e vírgula)");
@@ -581,7 +583,7 @@ public class Compiler {
     // assign_expr := id := expr
     /*  Para diferenciar 'assign_expr' de 'call_expr' em 'stmt',
         'assign_expr' é iniciado em ':=', não 'id' */
-    public Assign_stmt assign_expr(Identifier id) {
+    public Assign_expr assign_expr(Identifier id) {
         //id();
         
         // Verifica existência do identificador na tabela hash global e local
@@ -597,12 +599,11 @@ public class Compiler {
         }
         
         lexer.nextToken();
-        
-        Assign_stmt as = new Assign_stmt(id, expr());
+        Assign_expr ae = new Assign_expr(id, expr());
         // O tipo não é mais esperado
         exprExpectedType = null;
         
-        return(as);
+        return(ae);
     }
 
     // read_stmt := READ ( id_list );
@@ -1065,7 +1066,7 @@ public class Compiler {
 
     // for_stmt := FOR ({assign_expr}; {cond}; {assign_expr}) stmt_list ENDFOR
     public For_stmt for_stmt() {
-        Assign_stmt assign_init = null, assign_step = null;
+        Assign_expr assign_init = null, assign_step = null;
         Cond cond = null;
         ArrayList<Stmt> stmt_list;
 
