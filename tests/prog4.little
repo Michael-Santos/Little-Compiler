@@ -38,7 +38,7 @@ BEGIN
     -- Impressao de opcoes e recebimento das entradas
     WRITE ( msg1 );
     READ ( opcao );
-    WRITE ( msg2 );
+    WRITE ( fibonacci );
     READ ( termo );
 
     -- Verifica opcao

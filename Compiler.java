@@ -609,16 +609,27 @@ public class Compiler {
 
         ArrayList<Identifier> id = id_list();
         ArrayList<Typable> typable = new ArrayList<Typable>();
-        
+        Object variavel = null;
+
         for(Identifier identifier : id){
             // Verifica existência do identificador na tabela hash global e local
-            if (symbolTable.get(identifier.getName()) == null) {
+            if ((variavel = symbolTable.get(identifier.getName())) == null) {
               error.show("Variável '" + identifier.getName() + "' não declarada");
             } else {
                 // Verifica se o tipo é Void
-                if (((Typable) symbolTable.get(identifier.getName())).getType().equals("VOID")) {
+                /*if (((Typable) symbolTable.get(identifier.getName())).getType().equals("VOID")) {
                     error.show("Escrevendo em algo do tipo 'VOID'");
                 } else {
+                    typable.add((Typable) symbolTable.get(identifier.getName()));
+                }*/
+
+                // Verifica se o parâmetro passado não é função ou string (gramática não permite função como parâmetro)
+                // Semanticamente não é permitindo passar STRING como parâmetro para READ
+                if (variavel instanceof Func_decl){
+                    error.show("Função '" + identifier.getName() + "' é argumento inválido para READ");
+                }else if (variavel instanceof String_decl) {
+                    error.show("STRING '" + identifier.getName() + "' é argumento inválido para READ");
+                }else {
                     typable.add((Typable) symbolTable.get(identifier.getName()));
                 }
             }
@@ -651,16 +662,24 @@ public class Compiler {
 
         ArrayList<Identifier> id = id_list();
         ArrayList<Typable> typable = new ArrayList<Typable>();
+        Object variavel = null;
 
         for(Identifier identifier : id){
             // Verifica existência do identificador na tabela hash global e local
-            if (symbolTable.get(identifier.getName()) == null) {
+            if ((variavel = symbolTable.get(identifier.getName())) == null) {
               error.show("Variável '" + identifier.getName() + "' não declarada");
             } else {
                 // Verifica se o tipo é Void
-                if (((Typable) symbolTable.get(identifier.getName())).getType().equals("VOID")) {
+                /*if (((Typable) symbolTable.get(identifier.getName())).getType().equals("VOID")) {
                     error.show("Lendo de algo do tipo 'VOID'");
                 } else {
+                    typable.add((Typable) symbolTable.get(identifier.getName()));
+                }*/
+
+                // Verifica se o parâmetro é função (gramática não permite função como parâmetro para write)
+                if (variavel instanceof Func_decl){
+                    error.show("Função '" + identifier.getName() + "' é argumento inválido para WRITE");
+                }else {
                     typable.add((Typable) symbolTable.get(identifier.getName()));
                 }
             }
