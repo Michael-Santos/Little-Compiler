@@ -135,29 +135,15 @@ public class Compiler {
 
             // Verifica existência do identificador na tabela hash global, pois não estamos em uma função,
             // caso contrário verifica na hash local
-            /*if (currentFunction == null) {
-                if (symbolTable.getInGlobal(id.getName()) != null) {
-                    error.show("Variável global ou função com identificador '" + id.getName() + "' já declarada");
-                }else{
-                    symbolTable.putInGlobal(id.getName(), sd);
-                }
-            } else {
-                if ((symbolTable.getInLocal(id.getName())) != null) {
-                    error.show("Variável local com identificador '" + id.getName() + "' já declarada");
-                } else if ((type = symbolTable.getInGlobal(id.getName())) != null) {
-                    if (type instanceof Func_decl) {
-                        error.show("Não pode ser declarada variável '" + id.getName() + "', pois existe função com o mesmo identificador");
-                    } else {
-                        symbolTable.putInLocal(id.getName(), sd);
-                    }
-                }
-            }*/
-
             if ((type = symbolTable.getInGlobal(id.getName())) != null) {
                 if ((type instanceof Func_decl)){
                     error.show("Função com identificador '" + id.getName() + "' já declarada");
                 } else if(currentFunction == null){
                     error.show("Variável global com identificador '" + id.getName() + "' já declarada");
+                } else if (symbolTable.getInLocal(id.getName()) != null) {
+                    error.show("Variável local com identificador '" + id.getName() + "' já declarada");
+                } else {
+                    symbolTable.putInLocal(id.getName(), sd);
                 }
             } else if (symbolTable.getInLocal(id.getName()) != null) {
                 error.show("Variável local com identificador '" + id.getName() + "' já declarada");
@@ -165,7 +151,6 @@ public class Compiler {
                 // Verifica se o escopo é global ou local
                 if (currentFunction == null) {
                     symbolTable.putInGlobal(id.getName(), sd);
-
                 } else {
                     symbolTable.putInLocal(id.getName(), sd);
                 }
@@ -248,6 +233,10 @@ public class Compiler {
                         error.show("Função com identificador '" + identifier.getName() + "' já declarada");
                     } else if(currentFunction == null){
                         error.show("Variável global com identificador '" + identifier.getName() + "' já declarada");
+                    } else if (symbolTable.getInLocal(identifier.getName()) != null) {
+                        error.show("Variável local com identificador '" + identifier.getName() + "' já declarada");
+                    } else {
+                        symbolTable.putInLocal(identifier.getName(), variable);
                     }
                 } else if (symbolTable.getInLocal(identifier.getName()) != null) {
                     error.show("Variável local com identificador '" + identifier.getName() + "' já declarada");

@@ -4,7 +4,7 @@ BEGIN
   STRING msg1 := "Escolha operacao desejada: (0) N termo de Fibonacci, (1) Calcular fatorial:" ;
   STRING msg2 := "Insira o valor desejado:" ;
   STRING msgErro := "Entrada invalida!" ;
-
+  
   -- Fibonacci recursivo
   FUNCTION INT fibonacci (INT termo)
   BEGIN
