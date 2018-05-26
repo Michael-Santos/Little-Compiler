@@ -15,7 +15,13 @@ public class Cond{
 
 	public void genC(PW pw){
 		exprDir.genC(pw);
-		pw.print(" " + compop + " ", false);
+		
+		if (compop.equals("=")){
+			pw.print(" == ", false);
+		}else{
+			pw.print(" " + compop + " ", false);
+		}
+		
 		exprEsq.genC(pw);
 	}
 }
