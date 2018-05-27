@@ -1,0 +1,45 @@
+PROGRAM fibonacci
+BEGIN
+
+  FUNCTION INT soma (INT x , INT y )
+  BEGIN
+    INT z ;
+    z := x + y ;
+    RETURN z ;
+  END
+
+  FUNCTION INT recursao (INT x , INT y , INT num , INT entrada )
+  BEGIN
+    INT temp1 ;
+    IF ( num = entrada ) THEN
+        RETURN y ;
+    ENDIF
+    temp1 := soma ( x , y ) ;
+    x := y ;
+    y := temp1 ;
+    num := num + 1 ;
+    y := recursao ( x , y , num , entrada ) ;
+    RETURN y ;
+  END
+
+  FUNCTION INT main ()
+  BEGIN
+    INT x , y , result , num , soma , entrada ; 
+    --Erro: variavel possui o mesmo nome de uma função
+
+    READ ( entrada );
+
+    x := 0 ;
+    y := 1 ;
+    num := 1 ;
+
+    IF ( entrada = 0 ) THEN
+        result := x ;
+    ELSE
+        result := recursao (x , y , num , entrada ) ;
+    ENDIF
+
+    WRITE ( result );
+    RETURN 0 ;
+  END
+END

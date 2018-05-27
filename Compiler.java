@@ -751,7 +751,9 @@ public class Compiler {
 
     // expr := factor expr_tail
     public Expr expr() {
-        return(new Expr(factor(), expr_tail()));
+        exprActualType = null;
+        
+        return(new Expr(factor(), expr_tail(), exprActualType));
     }
 
     // expr_tail := addop factor expr_tail | empty
@@ -794,16 +796,19 @@ public class Compiler {
                 if (symbolTable.getInGlobal(id.getName()) == null) {
                   error.show("Função chamada '" + id.getName() + "' não declarada");
                 } else {
+                    exprActualType = ((Typable) symbolTable.get(id.getName())).getType();
                     // Verifica o tipo
                     if(exprExpectedType == null) {
                         // Atribui o primeiro tipo como tipo "esperado"
-                        exprExpectedType = ((Typable) symbolTable.get(id.getName())).getType();
+                        exprExpectedType = exprActualType;
                     } else {
                         // Verifica compatibilidade de tipos
-                        String type = ((Typable) symbolTable.get(id.getName())).getType();
-
-                        if(!exprExpectedType.equals(type)) {
-                            error.show("Incompatibilidade de tipos - função '" + id.getName() + "' é do tipo '" + type + "', esperava-se ser do tipo '" + exprExpectedType + "'");
+                        if (exprExpectedType.equals("FLOAT")){
+                            if(!(exprActualType.equals("FLOAT") || exprActualType.equals("INT"))){
+                                error.show("Incompatibilidade de tipos - função '" + id.getName() + "' é do tipo '" + exprActualType + "', esperava-se ser do tipo 'FLOAT'");
+                            }
+                        } else if(!exprExpectedType.equals(exprActualType)) {
+                            error.show("Incompatibilidade de tipos - função '" + id.getName() + "' é do tipo '" + exprActualType + "', esperava-se ser do tipo '" + exprExpectedType + "'");
                         }
                     }
                 }
@@ -814,21 +819,19 @@ public class Compiler {
                 if (symbolTable.get(id.getName()) == null) {
                   error.show("Variável '" + id.getName() + "' não declarada");
                 } else {
+                    exprActualType = ((Typable) symbolTable.get(id.getName())).getType();
                     // Verifica o tipo
                     if(exprExpectedType == null) {
                         // Atribui o primeiro tipo como tipo "esperado"
-                        exprExpectedType = ((Typable) symbolTable.get(id.getName())).getType();
+                        exprExpectedType = exprActualType;
                     } else {
                         // Verifica compatibilidade de tipos
-                        String type = ((Typable) symbolTable.get(id.getName())).getType();
-                        
                         if (exprExpectedType.equals("FLOAT")){
-                            if(!(exprExpectedType.equals("FLOAT") || exprExpectedType.equals("INT"))){
-                                error.show("Incompatibilidade de tipos - variável '" + id.getName() + "' é do tipo '" + type + "', esperava-se ser do tipo 'FLOAT'");
+                            if(!(exprActualType.equals("FLOAT") || exprActualType.equals("INT"))){
+                                error.show("Incompatibilidade de tipos - variável '" + id.getName() + "' é do tipo '" + exprActualType + "', esperava-se ser do tipo 'FLOAT'");
                             }
-
-                        }else if(!exprExpectedType.equals(type)) {
-                            error.show("Incompatibilidade de tipos - variável '" + id.getName() + "' é do tipo '" + type + "', esperava-se ser do tipo '" + exprExpectedType + "'");
+                        } else if(!exprExpectedType.equals(exprActualType)) {
+                            error.show("Incompatibilidade de tipos - variável '" + id.getName() + "' é do tipo '" + exprActualType + "', esperava-se ser do tipo '" + exprExpectedType + "'");
                         }
                     }
                 }
@@ -849,23 +852,59 @@ public class Compiler {
         e 'primary' de 'call_expr' em 'postfix_expr',
         'call_expr' é iniciado em '(', não 'id' */
     public Call_expr call_expr(Identifier id) {
-        ArrayList<Expr> expr = new ArrayList<Expr>();
         //id();
+        ArrayList<Expr> expr = new ArrayList<Expr>();
         
         if (lexer.token != Symbol.LPAR) {
-            error.signal("Faltando '(' (abre parênteses)");
+                error.signal("Faltando '(' (abre parênteses)");
+            }
+            lexer.nextToken();
+    
+            if (lexer.token == Symbol.IDENT || lexer.token == Symbol.LPAR || lexer.token == Symbol.INTLITERAL || lexer.token == Symbol.FLOATLITERAL) {
+                expr = expr_list();
+            }
+        
+        // Essa verificação é utilizada para impedir exception no compilador caso a função não exista
+        // A checagem se a função existe ou não é feita em 'call_stmt' e 'postfix_expr'
+        if (symbolTable.getInGlobal(id.getName()) != null) {
+            // Pega a lista de parâmetros da função sendo chamada
+            ArrayList<Param_decl> CallFunctionPd = ((Func_decl) symbolTable.getInGlobal(id.getName())).getPd();
+            
+            // Verifica quantos argumentos são esperados e quantos estão sendo passados
+            int PdExpectedSize = CallFunctionPd.size(), PdActualSize = expr.size();
+            if(PdActualSize != PdExpectedSize) {
+                // String para salvar a mensagem de erro
+                String errorMsg = "A função '" + id.getName() + "' espera " + PdExpectedSize + " ";
+                if (PdExpectedSize == 1) {
+                    errorMsg = errorMsg.concat("argumento, mas ");
+                } else {
+                    errorMsg = errorMsg.concat("argumentos, mas ");
+                }
+                
+                if (PdActualSize == 1) {
+                    errorMsg = errorMsg.concat("está sendo passado " + PdActualSize);
+                } else {
+                    errorMsg = errorMsg.concat("estão sendo passados " + PdActualSize);
+                }
+                
+                error.show(errorMsg);
+            }
+            
+            // Verifica compatibilidade dos tipos
+            int i;
+            for(i = 0; i < PdExpectedSize && i < PdActualSize; i++) {
+                String expectedType = CallFunctionPd.get(i).getType(), actualType = expr.get(i).getType();
+                if(!expectedType.equals(actualType)) {
+                    error.show("Argumento " + (i + 1) + " é do tipo '" + actualType + "', esperava-se ser do tipo '" + expectedType + "'");
+                }
+            }
         }
-        lexer.nextToken();
-
-        if (lexer.token == Symbol.IDENT || lexer.token == Symbol.LPAR || lexer.token == Symbol.INTLITERAL || lexer.token == Symbol.FLOATLITERAL) {
-            expr = expr_list();
-        }
-
+        
         if (lexer.token != Symbol.RPAR) {
             error.signal("Faltando ')' (fecha parênteses)");
         }
         lexer.nextToken();
-
+        
         return(new Call_expr(id, expr));
     }
 
@@ -873,7 +912,12 @@ public class Compiler {
     public ArrayList<Expr> expr_list() {
         ArrayList<Expr> expr = new ArrayList<Expr>();
 
+        String oldExprExpectedType = exprExpectedType;
+        // Reseta o tipo esperado para cada expressão sendo chamada
+        exprExpectedType = null;
         expr.add(expr());
+        exprExpectedType = oldExprExpectedType;
+        
         expr.addAll(expr_list_tail());
 
         return(expr);
@@ -885,7 +929,12 @@ public class Compiler {
 
         while (lexer.token == Symbol.COMMA) {
             lexer.nextToken();
+            
+            String oldExprExpectedType = exprExpectedType;
+            // Reseta o tipo esperado para cada expressão sendo chamada
+            exprExpectedType = null;
             expr.add(expr());
+            exprExpectedType = oldExprExpectedType;
         }
 
         return(expr);
@@ -898,28 +947,25 @@ public class Compiler {
         Postfix_expr postfix = null;
 
         if (lexer.token == Symbol.INTLITERAL) {
+            exprActualType = "INT";
             // Verifica o tipo
             if(exprExpectedType == null) {
                 // Atribui o primeiro tipo como tipo "esperado"
-                exprExpectedType = "INT";
+                exprExpectedType = exprActualType;
             } else {
-                
                 if(!(exprExpectedType.equals("INT") || exprExpectedType.equals("FLOAT"))){
                     error.show("Incompatibilidade de tipos - declarado literal 'INT', esperava-se ser do tipo '" + exprExpectedType + "'");
                 }
-
-                //if(!exprExpectedType.equals("INT") ) {
-                //    error.show("Incompatibilidade de tipos - declarado literal 'INT', esperava-se ser do tipo '" + exprExpectedType + "'");
-                //}
             }
             
             postfix = new Int_literal(lexer.getIntValue());
             lexer.nextToken();
         } else if(lexer.token == Symbol.FLOATLITERAL){
+            exprActualType = "FLOAT";
             // Verifica o tipo
             if(exprExpectedType == null) {
                 // Atribui o primeiro tipo como tipo "esperado"
-                exprExpectedType = "FLOAT";
+                exprExpectedType = exprActualType;
             } else {
                 if(!exprExpectedType.equals("FLOAT")) {
                     // Necessário quando há comparações entre INT e FLOAT
@@ -1133,6 +1179,7 @@ public class Compiler {
     
     private Func_decl currentFunction;
     private String exprExpectedType;
+    private String exprActualType;
     private Boolean isComparation;
     private Boolean returnDefined;
 }

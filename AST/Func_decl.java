@@ -28,6 +28,10 @@ public class Func_decl implements Typable {
     return (this.id);
   }
   
+  public ArrayList<Param_decl> getPd() {
+    return (this.pd);
+  }
+  
   public void setType(String type) {
     this.type = type;
   }
@@ -64,5 +68,46 @@ public class Func_decl implements Typable {
 
     pw.sub();
     pw.println("}");
+  }
+  
+  // Usada para impressão de assinatura antes da main
+  public void genC(PW pw, boolean sig) {
+    if(sig) {
+      if (!id.getName().equals("main")) {
+        pw.print(type.toLowerCase() + " " + id.getName() + " (");
+        
+        boolean flagFirst = true;
+        for (Param_decl p : pd) {
+          if(flagFirst) {
+            flagFirst = false;
+          } else {
+            pw.print(", ", false);
+          }
+          p.genC(pw);
+        }
+    
+        pw.println(");", false);
+      }
+    } else {
+      pw.print(type.toLowerCase() + " " + id.getName() + " (");
+  
+      boolean flagFirst = true;
+      for (Param_decl p : pd) {
+        if(flagFirst) {
+          flagFirst = false;
+        } else {
+          pw.print(", ", false);
+        }
+        p.genC(pw);
+      }
+  
+      pw.println(") {", false);
+      pw.add();
+  
+      fb.genC(pw);
+  
+      pw.sub();
+      pw.println("}");
+    }
   }
 }

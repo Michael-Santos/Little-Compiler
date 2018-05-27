@@ -4,6 +4,8 @@ BEGIN
   STRING msg1 := "Escolha operacao desejada: (0) N termo de Fibonacci, (1) Calcular fatorial:" ;
   STRING msg2 := "Insira o valor desejado:" ;
   STRING msgErro := "Entrada invalida!" ;
+  INT umInteiro;
+  FLOAT eusouumfloat, umInteiro;
   
   -- Fibonacci recursivo
   FUNCTION INT fibonacci (INT termo)
@@ -11,7 +13,7 @@ BEGIN
     IF ( termo < 2 ) THEN
       RETURN termo ;
     ELSE
-      RETURN fibonacci ( termo - 1 ) + fibonacci ( termo - 2 ) ;
+      RETURN fibonacci ( termo - 1 , eusouumfloat, umInteiro) + fibonacci ( termo - 2 ) ;
     ENDIF
   END
 
@@ -30,17 +32,24 @@ BEGIN
     ENDIF
     RETURN resultado ;
   END
-
-  FUNCTION INT main ()
+  
+  FUNCTION INT main (INT uminteiro)
   BEGIN
-    INT resultado , opcao , termo ;
+    INT resultado , opcao , termo , outroInteiro ;
+    FLOAT outroFloat;
 
     -- Impressao de opcoes e recebimento das entradas
     WRITE ( msg1 );
     READ ( opcao );
     WRITE ( msg2 );
     READ ( termo );
-
+    
+    outroInteiro := umInteiro;
+    eusouumfloat := umInteiro + outroInteiro;
+    eusouumfloat := umInteiro + eusouumfloat;
+    -- Apenas a expressão abaixo irá gerar um erro
+    outroInteiro := umInteiro + eusouumfloat;
+    
     -- Verifica opcao
     IF ( opcao = 0 ) THEN
       -- Fibonacci
@@ -58,5 +67,17 @@ BEGIN
 
     WRITE ( opcao , termo , resultado );
     RETURN 0 ;
+  END
+  
+  FUNCTION VOID testeVoid1 ()
+  BEGIN
+    READ (msg2) ;
+    WRITE (testeVoid1) ;
+    RETURN umInteiro ;
+    RETURN testeVoid1() ;
+  END
+  
+  FUNCTION VOID testeVoid2 ()
+  BEGIN
   END
 END

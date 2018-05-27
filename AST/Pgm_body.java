@@ -15,8 +15,14 @@ public class Pgm_body {
     dl.genC(pw);
 
     if(!fd.isEmpty()) {
+      // Impressão de assinaturas
+      for (Func_decl f : fd) {
+				f.genC(pw, true);
+      }
+      pw.println("");
+      
+      // Impressão dos corpos das funções
       boolean flagFirst = true;
-
       for (Func_decl f : fd) {
         if(flagFirst) {
 					flagFirst = false;

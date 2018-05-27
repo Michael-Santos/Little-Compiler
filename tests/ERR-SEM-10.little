@@ -1,0 +1,63 @@
+PROGRAM sequencias
+BEGIN
+  -- Mensagens para impressao
+  STRING msg1 := "Escolha operacao desejada: (0) N termo de Fibonacci, (1) Calcular fatorial:" ;
+  STRING msg2 := "Insira o valor desejado:" ;
+  STRING msgErro := "Entrada invalida!" ;
+  
+  -- Fibonacci recursivo
+  FUNCTION INT fibonacci (INT termo)
+  BEGIN
+    IF ( termo < 2 ) THEN
+      RETURN termo ;
+    ELSE
+      RETURN fibonacci ( termo - 1 ) + fibonacci ( termo - 2 ) ;
+    ENDIF
+  END
+
+  -- Fatorial
+  FUNCTION INT fatorial (INT termo)
+  BEGIN
+    INT i , resultado ;
+
+    IF ( termo = 0 ) THEN
+      RETURN 1 ;
+    ELSE
+      resultado := termo ;
+      FOR (i := termo - 1 ; i > 0 ; i := i - 1)
+        resultado := resultado * i ;
+      ENDFOR
+    ENDIF
+    RETURN resultado ;
+  END
+
+  FUNCTION VOID main ()
+  --Função VOID com retorno
+  BEGIN
+    INT resultado , opcao , termo ;
+
+    -- Impressao de opcoes e recebimento das entradas
+    WRITE ( msg1 );
+    READ ( opcao );
+    WRITE ( msg2 );
+    READ ( termo );
+
+    -- Verifica opcao
+    IF ( opcao = 0 ) THEN
+      -- Fibonacci
+      resultado := fibonacci ( termo ) ;
+    ELSE
+      IF ( opcao = 1 ) THEN
+        -- Fatorial
+        resultado := fatorial ( termo ) ;
+      ELSE
+        -- Opcao inexistente (imprime mensagem de erro)
+        WRITE ( msgErro ) ;
+        RETURN 0 ;
+      ENDIF
+    ENDIF
+
+    WRITE ( opcao , termo , resultado );
+    RETURN 0 ;
+  END
+END
