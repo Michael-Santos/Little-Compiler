@@ -10,7 +10,7 @@ all:
 clean: clean-class clean-c
 
 clean-class:
-	rm -R ./*.class
+	find $(PWD) -iname "*.class" -exec rm -fr {} \;
 
 clean-c:
-	rm -R ./*.c
+	find $(PWD) -iname "*.c" -exec rm -fr {} \;
