@@ -23,8 +23,8 @@ public class Compiler {
         }
         
         // Verifica existência de função main
-        if (symbolTable.getInGlobal("main") == null) {
-          error.show("Não foi declarada função sem parâmetros 'main'");
+        if (symbolTable.getInGlobal("main") == null || !((Typable)symbolTable.getInGlobal("main")).getType().equals("INT")) {
+          error.show("Não foi declarada função inteira sem parâmetros 'main'");
         }
         
         // Verifica ocorrência de erro durante compilação
@@ -830,7 +830,7 @@ public class Compiler {
                             if(!(exprActualType.equals("FLOAT") || exprActualType.equals("INT"))){
                                 error.show("Incompatibilidade de tipos - variável '" + id.getName() + "' é do tipo '" + exprActualType + "', esperava-se ser do tipo 'FLOAT'");
                             }
-                        } else if(!exprExpectedType.equals(exprActualType)) {
+                        } else if(!(exprExpectedType.equals("INT") && isComparation && exprActualType.equals("FLOAT")) && !exprExpectedType.equals(exprActualType)) {
                             error.show("Incompatibilidade de tipos - variável '" + id.getName() + "' é do tipo '" + exprActualType + "', esperava-se ser do tipo '" + exprExpectedType + "'");
                         }
                     }

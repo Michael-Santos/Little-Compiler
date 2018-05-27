@@ -16,7 +16,7 @@ BEGIN
   END
 
   -- Fatorial
-  FUNCTION INT fatorial (INT termo)
+  FUNCTION INT fatorial (INT termo, INT rola)
   BEGIN
     INT i , resultado ;
 
