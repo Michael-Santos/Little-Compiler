@@ -32,7 +32,7 @@ BEGIN
   END
 
   FUNCTION VOID main ()
-  --Função VOID com retorno
+  -- Função main VOID (deveria ser INT) com retorno (VOID não pode ter retorno)
   BEGIN
     INT resultado , opcao , termo ;
 

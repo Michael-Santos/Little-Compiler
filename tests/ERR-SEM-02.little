@@ -1,5 +1,7 @@
 PROGRAM aproxpi
 BEGIN
+  STRING umastring := "Lorem ipsum dolum" ;
+  
   -- Realizar a formula de Leibniz para aproximacao de pi (1 - 1/3 + 1/5 - 1/7 - ...  = pi/4)
   FUNCTION INT main ()
   BEGIN
@@ -10,8 +12,8 @@ BEGIN
 
     somatorio := limite ;
 
-    --ERRO : Comparação entre INT e FLOAT
-    FOR ( i := 1; i < somatorio + 1; i := i + 1 )
+    --ERRO : Comparação entre INT e STRING
+    FOR ( i := 1; i < umastring; i := i + 1 )
       base := i * 2 - 1 ;
 
       temp := i / 2 ;
